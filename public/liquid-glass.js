@@ -141,6 +141,7 @@
       let isDragging = false;
       let startX, startY, initialX, initialY;
 
+      // Mouse events
       this.container.addEventListener('mousedown', (e) => {
         isDragging = true;
         this.container.style.cursor = 'grabbing';
@@ -156,24 +157,17 @@
         if (isDragging) {
           const deltaX = e.clientX - startX;
           const deltaY = e.clientY - startY;
-          
-          // Calculate new position
           const newX = initialX + deltaX;
           const newY = initialY + deltaY;
-          
-          // Constrain position within viewport bounds
           const constrained = this.constrainPosition(newX, newY);
-          
           this.container.style.left = constrained.x + 'px';
           this.container.style.top = constrained.y + 'px';
           this.container.style.transform = 'none';
         }
-
         // Update mouse position for shader
         const rect = this.container.getBoundingClientRect();
         this.mouse.x = (e.clientX - rect.left) / rect.width;
         this.mouse.y = (e.clientY - rect.top) / rect.height;
-        
         if (this.mouseUsed) {
           this.updateShader();
         }
@@ -184,11 +178,42 @@
         this.container.style.cursor = 'grab';
       });
 
+      // Touch events
+      this.container.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        this.container.style.cursor = 'grabbing';
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+        const rect = this.container.getBoundingClientRect();
+        initialX = rect.left;
+        initialY = rect.top;
+        e.preventDefault();
+      });
+
+      document.addEventListener('touchmove', (e) => {
+        if (isDragging) {
+          const touch = e.touches[0];
+          const deltaX = touch.clientX - startX;
+          const deltaY = touch.clientY - startY;
+          const newX = initialX + deltaX;
+          const newY = initialY + deltaY;
+          const constrained = this.constrainPosition(newX, newY);
+          this.container.style.left = constrained.x + 'px';
+          this.container.style.top = constrained.y + 'px';
+          this.container.style.transform = 'none';
+        }
+      });
+
+      document.addEventListener('touchend', () => {
+        isDragging = false;
+        this.container.style.cursor = 'grab';
+      });
+
       // Handle window resize to maintain constraints
       window.addEventListener('resize', () => {
         const rect = this.container.getBoundingClientRect();
         const constrained = this.constrainPosition(rect.left, rect.top);
-        
         if (rect.left !== constrained.x || rect.top !== constrained.y) {
           this.container.style.left = constrained.x + 'px';
           this.container.style.top = constrained.y + 'px';
@@ -258,10 +283,15 @@
 
   // Create the liquid glass effect
   function createLiquidGlass() {
+    // Responsive size
+    const isMobile = window.innerWidth <= 600;
+    const glassWidth = isMobile ? 150 : 300;
+    const glassHeight = isMobile ? 100 : 200;
+
     // Create shader
     const shader = new Shader({
-      width: 300,
-      height: 200,
+      width: glassWidth,
+      height: glassHeight,
       fragment: (uv, mouse) => {
         const ix = uv.x - 0.5;
         const iy = uv.y - 0.5;
