@@ -35,6 +35,29 @@
     return 'liquid-glass-' + Math.random().toString(36).substr(2, 9);
   }
 
+  // Detect iOS and fallback if needed
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const supportsBackdropFilter = CSS.supports('backdrop-filter', 'blur(1px)') || CSS.supports('-webkit-backdrop-filter', 'blur(1px)');
+
+  if (isIOS && !supportsBackdropFilter) {
+    // Show a simple message or fallback UI
+    const fallback = document.createElement('div');
+    fallback.style.position = 'fixed';
+    fallback.style.bottom = '20px';
+    fallback.style.left = '50%';
+    fallback.style.transform = 'translateX(-50%)';
+    fallback.style.background = 'rgba(0,0,0,0.7)';
+    fallback.style.color = '#fff';
+    fallback.style.padding = '12px 24px';
+    fallback.style.borderRadius = '12px';
+    fallback.style.zIndex = '99999';
+    fallback.style.fontSize = '1rem';
+    fallback.innerText = 'Liquid Glass effect is not supported on your device.';
+    document.body.appendChild(fallback);
+    setTimeout(() => fallback.remove(), 6000);
+    return;
+  }
+
   // Main Shader class
   class Shader {
     constructor(options = {}) {
